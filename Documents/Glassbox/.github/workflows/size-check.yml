@@ -1,0 +1,156 @@
+name: Binary Size Check
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  size-check:
+    name: Check Binary Sizes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+      
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+      
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-target-release-
+      
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      
+      - name: Build release binaries
+        run: cargo build --release --verbose
+      
+      - name: Check binary sizes
+        id: size_check
+        run: |
+          chmod +x scripts/check-binary-sizes.sh
+          ./scripts/check-binary-sizes.sh
+        continue-on-error: true
+      
+      - name: Upload size report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: size-report
+          path: size-report.json
+          retention-days: 90
+      
+      - name: Display size report
+        if: always()
+        run: |
+          echo "## Binary Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f size-report.json ]; then
+            echo "### Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            total=$(jq -r '.summary.total' size-report.json)
+            passed=$(jq -r '.summary.passed' size-report.json)
+            warnings=$(jq -r '.summary.warnings' size-report.json)
+            failures=$(jq -r '.summary.failures' size-report.json)
+            
+            echo "- **Total Checks:** $total" >> $GITHUB_STEP_SUMMARY
+            echo "- **Passed:** ✅ $passed" >> $GITHUB_STEP_SUMMARY
+            echo "- **Warnings:** ⚠️ $warnings" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failures:** ❌ $failures" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            echo "### Details" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Binary | Size | Threshold | Usage | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|------|-----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+            
+            jq -r '.results[] | "| \(.name) | \(.actual_size) bytes | \(.max_size) bytes | \(.percent)% | \(.status) |"' size-report.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Size report not generated" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (!fs.existsSync('size-report.json')) {
+              console.log('No size report found');
+              return;
+            }
+            
+            const report = JSON.parse(fs.readFileSync('size-report.json', 'utf8'));
+            
+            let comment = '## 📊 Binary Size Report\n\n';
+            comment += '### Summary\n\n';
+            comment += `- **Total Checks:** ${report.summary.total}\n`;
+            comment += `- **Passed:** ✅ ${report.summary.passed}\n`;
+            comment += `- **Warnings:** ⚠️ ${report.summary.warnings}\n`;
+            comment += `- **Failures:** ❌ ${report.summary.failures}\n\n`;
+            
+            comment += '### Details\n\n';
+            comment += '| Binary | Size | Threshold | Usage | Status |\n';
+            comment += '|--------|------|-----------|-------|--------|\n';
+            
+            report.results.forEach(result => {
+              const sizeKB = (result.actual_size / 1024).toFixed(2);
+              const thresholdKB = (result.max_size / 1024).toFixed(2);
+              const statusEmoji = result.status === 'PASS' ? '✅' : 
+                                  result.status === 'WARN' ? '⚠️' : '❌';
+              comment += `| ${result.name} | ${sizeKB} KB | ${thresholdKB} KB | ${result.percent}% | ${statusEmoji} ${result.status} |\n`;
+            });
+            
+            if (report.summary.failures > 0) {
+              comment += '\n⚠️ **Action Required:** Some binaries exceed size thresholds. Consider optimizing or updating thresholds.\n';
+            } else if (report.summary.warnings > 0) {
+              comment += '\n⚠️ **Warning:** Some binaries are approaching size thresholds.\n';
+            } else {
+              comment += '\n✅ All binaries are within size thresholds.\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+      
+      - name: Fail if size check failed
+        if: steps.size_check.outcome == 'failure'
+        run: |
+          echo "❌ Binary size check failed - one or more binaries exceed thresholds"
+          exit 1

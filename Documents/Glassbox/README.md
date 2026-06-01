@@ -218,6 +218,24 @@ Run the watch mode demo:
 cargo run --bin watch-demo
 ```
 
+## Binary Size Tracking
+
+The project includes automated binary size tracking to detect regressions:
+
+```bash
+# Check binary sizes against thresholds
+cargo build --release
+./scripts/check-binary-sizes.sh
+
+# Measure baseline sizes
+./scripts/measure-baseline-sizes.sh
+
+# Run size tracking tests
+./scripts/test-size-tracking.sh
+```
+
+Size checks run automatically in CI/CD on every push and pull request. See [BINARY_SIZE_TRACKING.md](BINARY_SIZE_TRACKING.md) for detailed documentation.
+
 ## Performance Considerations
 
 - **State Hashing**: Uses SHA-256 for reliable change detection

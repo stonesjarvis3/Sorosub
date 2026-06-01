@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "description": "Binary size thresholds for Glassbox project",
+  "thresholds": {
+    "glassbox-cli": {
+      "max_size_bytes": 15728640,
+      "max_size_human": "15 MB",
+      "warn_threshold_percent": 90,
+      "description": "Main CLI binary for Glassbox trace viewer"
+    },
+    "watch-demo": {
+      "max_size_bytes": 15728640,
+      "max_size_human": "15 MB",
+      "warn_threshold_percent": 90,
+      "description": "Watch mode demonstration binary"
+    },
+    "libglassbox.rlib": {
+      "max_size_bytes": 10485760,
+      "max_size_human": "10 MB",
+      "warn_threshold_percent": 90,
+      "description": "Glassbox library artifact"
+    }
+  },
+  "notes": [
+    "Thresholds are set based on typical Rust binary sizes with Soroban SDK dependencies",
+    "warn_threshold_percent triggers a warning when size exceeds this percentage of max_size_bytes",
+    "Adjust thresholds as needed based on actual baseline measurements",
+    "Size measurements are for release builds with default optimizations"
+  ]
+}
