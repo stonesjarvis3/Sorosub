@@ -13,6 +13,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
 hex = "0.4"
+notify = "6.1"
+crossbeam-channel = "0.5"
 
 [dev-dependencies]
 pretty_assertions = "1.4"
@@ -24,3 +26,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "glassbox-cli"
 path = "src/bin/cli.rs"
+
+[[bin]]
+name = "watch-demo"
+path = "src/bin/watch-demo.rs"

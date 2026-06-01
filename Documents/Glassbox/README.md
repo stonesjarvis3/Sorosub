@@ -8,6 +8,7 @@ A Rust library for incrementally refreshing contract execution traces when state
 - **Incremental Refresh**: Updates only affected portions of the trace tree
 - **Multiple Refresh Strategies**: Choose between minimal, with-children, with-descendants, or full refresh
 - **Interactive Viewer**: Visualize traces with support for incremental updates
+- **Watch Mode**: Automatically rerun debug sessions when files change
 - **Performance Optimized**: Avoids unnecessary recomputation by tracking dependencies
 
 ## Installation
@@ -24,7 +25,7 @@ glassbox = "0.1.0"
 ```rust
 use glassbox::{
     ContractState, IncrementalRefresher, InteractiveViewer,
-    RefreshStrategy, TraceTree, TraceNode
+    RefreshStrategy, TraceTree, TraceNode, WatchMode, WatchConfig
 };
 
 // Create a trace tree
@@ -53,6 +54,13 @@ viewer.apply_refresh(&result);
 
 // Render updated trace
 println!("{}", viewer.render());
+
+// Optional: Enable watch mode for automatic reruns
+let mut config = WatchConfig::new();
+config.add_watch_path("src").set_debounce_ms(500);
+
+let mut watch = WatchMode::new(config);
+// watch.start(your_debug_session)?;
 ```
 
 ## Architecture
@@ -124,6 +132,40 @@ println!("Refreshed {} nodes in {}ms",
 );
 ```
 
+### Watch Mode for Automatic Reruns
+
+```rust
+use glassbox::{WatchMode, WatchConfig, DebugSession};
+
+// Implement your debug session
+struct MyDebugSession {
+    // Your session state
+}
+
+impl DebugSession for MyDebugSession {
+    fn run(&mut self) -> Result<(), String> {
+        // Run your debug logic
+        println!("Running debug session...");
+        Ok(())
+    }
+
+    fn name(&self) -> &str {
+        "my-session"
+    }
+}
+
+// Configure and start watch mode
+let mut config = WatchConfig::new();
+config
+    .add_watch_path("src")
+    .add_include_pattern("*.rs".to_string())
+    .set_debounce_ms(500);
+
+let session = MyDebugSession::new();
+let mut watch = WatchMode::new(config);
+watch.start(session)?;
+```
+
 ### Handling Code Changes
 
 ```rust
@@ -168,6 +210,12 @@ Run the CLI demo:
 
 ```bash
 cargo run --bin glassbox-cli
+```
+
+Run the watch mode demo:
+
+```bash
+cargo run --bin watch-demo
 ```
 
 ## Performance Considerations
@@ -228,3 +276,4 @@ MIT License - see LICENSE file for details
 ## Related Issues
 
 - Closes #130: Implement incremental trace refresh support
+- Closes #133: Implement watch mode for automatic debug reruns
