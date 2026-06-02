@@ -1,0 +1,27 @@
+{
+  "name": "session-management",
+  "version": "1.0.0",
+  "description": "Session tracking and management feature for user authentication",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest"
+  },
+  "keywords": ["session", "authentication", "security"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "pg": "^8.11.0",
+    "bcrypt": "^5.1.1",
+    "uuid": "^9.0.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.0"
+  }
+}
