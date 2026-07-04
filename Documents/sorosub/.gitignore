@@ -1,0 +1,41 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock
+*.pdb
+
+# WASM
+*.wasm
+*.wasm.map
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+*.secrets
+
+# Keys & Credentials
+*.key
+*.pem
+secret_key
+admin_key
+*.keystore
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/dist
+/build
