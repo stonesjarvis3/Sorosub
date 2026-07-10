@@ -1,8 +1,16 @@
-# SorobanLoyalty
+# Sorosub
+
 
 A modular, production-grade on-chain loyalty platform built on the **Stellar** network using **Soroban** smart contracts. Businesses create reward campaigns, users earn tokenized incentives (LYT), and everything is stored transparently on-chain.
 
 ---
+## Screenshot 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c10beb2f-d4c5-45d1-a05d-b7e81c935a97" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c7d3de4e-3ce9-4216-8b5a-f5fd05ab8a1e" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/eea7428f-3595-4df4-b6f9-575bf424d24e" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5e8f1851-bf9d-402e-9c31-025781e948ba" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d31ccb6f-5b04-4222-8de7-a6b905dc23e3" />
+
 
 ## Architecture
 
